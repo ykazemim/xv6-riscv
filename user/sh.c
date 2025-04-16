@@ -103,9 +103,25 @@ runcmd(struct cmd *cmd)
         argc++;
       }
 
-      if(is_valid){
-        concatenated[pos] = '\0';
-        fprintf(2, "%s\n", concatenated);
+      if (is_valid)
+      {
+        char *p = concatenated;
+        fprintf(2,"Concat is: %s\n",concatenated);
+        while (*p)
+        {
+          if (p[0] == 'o' && p[1] == 's')
+          {
+            // Print 'os' in blue
+            fprintf(2, "\033[34mos\033[0m");
+            p += 2;
+          }
+          else
+          {
+            write(2, p, 1);
+            p++;
+          }
+        }
+        fprintf(2, "\n");
       }
 
       exit(0);
