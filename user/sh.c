@@ -14,6 +14,7 @@
 #define MAXARGS 10
 
 #define SHELL_PROMPT "$younes-saleh "
+#define MAX_CONCATENATED_LEN 512
 
 struct cmd {
   int type;
@@ -78,6 +79,37 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit(1);
+    if (strcmp(ecmd->argv[0], "!") == 0)
+    {
+      int argc = 1;
+      int total_len = 0 , temp_len = 0;
+      short int is_valid = 1;
+      char concatenated[512 + 1];
+      int pos = 0;
+
+      while (ecmd->argv[argc])
+      {
+        temp_len = strlen(ecmd->argv[argc]);
+        total_len += temp_len;
+        if (total_len > MAX_CONCATENATED_LEN)
+        {
+          fprintf(2, "Message too long\n");
+          is_valid = 0;
+          break;
+        }
+        memcpy(concatenated + pos, ecmd->argv[argc], temp_len);
+        pos += temp_len;
+        concatenated[pos++] = ' ';
+        argc++;
+      }
+
+      if(is_valid){
+        concatenated[pos] = '\0';
+        fprintf(2, "%s\n", concatenated);
+      }
+
+      exit(0);
+    }
     exec(ecmd->argv[0], ecmd->argv);
     fprintf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
