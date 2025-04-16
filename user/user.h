@@ -22,6 +22,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int trigger(void); // New system call for triggering
 
 // ulib.c
 int stat(const char*, struct stat*);
