@@ -106,7 +106,6 @@ runcmd(struct cmd *cmd)
       if (is_valid)
       {
         char *p = concatenated;
-        fprintf(2,"Concat is: %s\n",concatenated);
         while (*p)
         {
           if (p[0] == 'o' && p[1] == 's')
