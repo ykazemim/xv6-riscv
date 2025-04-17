@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "custom_logger.h"
 
 struct cpu cpus[NCPU];
 
@@ -692,4 +693,15 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+// Send a custom log message to the logger in INFO level.
+// return 0 on success.
+int
+trigger(void)
+{
+  log_level_t level = INFO;
+  log_message(level, "This is a log to test a new xv6 system call\n");
+  // TODO: Add a test to check if the log message was received by the logger.
+  return 0;
 }
