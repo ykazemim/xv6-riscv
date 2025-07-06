@@ -767,3 +767,39 @@ exitthread() {
   if (!thread_schd(p))
     setkilled(p);
 }
+
+// Join a thread
+int
+jointhread(uint join_id) {
+  struct proc *p = myproc();
+  struct thread *t = p->current_thread;
+
+  // Check if the current thread is valid
+  if (!t)
+    return -3;
+  
+  int found = 0;
+  uint current_id = join_id;
+
+  while (current_id != 0) {
+    if (current_id == t->id) {
+      // Deadlock; If both IDs are the same, it means a thread is trying to join itself,
+      // which would cause it to wait forever for its own completion.
+      return -1;
+    }
+
+    uint target_id = current_id;
+    current_id = 0;
+    for (int i = 0; i < NTHREAD; i++) {
+      if (p->threads[i].id == target_id) {
+        current_id = p->threads[i].join;
+        found = 1;
+        break;
+      }
+    }
+  }
+
+  if (!found)
+    return -2;
+
+}
