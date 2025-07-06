@@ -56,6 +56,7 @@ procinit(void)
       initlock(&p->lock, "proc");
       p->state = UNUSED;
       p->kstack = KSTACK((int) (p - proc));
+      p->current_thread = 0; //Initialize current_thread to indicate no active thread
   }
 }
 
@@ -170,6 +171,11 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  p->current_thread = 0; // Reset current_thread to null
+  for (int i = 0; i < NTHREAD; i++) {
+    freethread(&p->threads[i]); // Free all threads associated with the process
+  }
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -462,14 +468,16 @@ scheduler(void)
         // Switch to chosen process.  It is the process's job
         // to release its lock and then reacquire it
         // before jumping back to us.
-        p->state = RUNNING;
-        c->proc = p;
-        swtch(&c->context, &p->context);
+        if (thread_schd(p)) {
+          p->state = RUNNING;
+          c->proc = p;
+          swtch(&c->context, &p->context);
 
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
-        c->proc = 0;
-        found = 1;
+          // Process is done running for now.
+          // It should have changed its p->state before coming back.
+          c->proc = 0;
+          found = 1; 
+        }
       }
       release(&p->lock);
     }
@@ -736,7 +744,7 @@ initthread(struct proc *p)
   return p->current_thread;
 }
 
-// Schedules the next thread, on success returns 0 else 1
+// Schedules the next thread, on success returns 1 else 0
 int
 thread_schd(struct proc *p)
 {
@@ -774,7 +782,7 @@ thread_schd(struct proc *p)
     next->state = THREAD_RUNNING;
     struct thread *t = p->current_thread;
     p->current_thread = next;
-    
+
     // If the current thread has a trapframe, copy it to the process's trapframe
     if (t->trapframe)
       *t->trapframe = *p->trapframe;
