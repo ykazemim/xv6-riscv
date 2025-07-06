@@ -441,6 +441,9 @@ wait(uint64 addr)
   }
 }
 
+// Predifine the thread_schd function
+int thread_schd(struct proc *p);
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -769,7 +772,7 @@ thread_schd(struct proc *p)
     
     if (t->state == THREAD_RUNNABLE) {
       next = t;
-      bread;
+      break;
     } else if (t->state == THREAD_SLEEPING && ticks0 - t->sleep_tick0 >= t->sleep_n) {
       next = t;
       break;

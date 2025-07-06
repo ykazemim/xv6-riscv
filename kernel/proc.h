@@ -81,6 +81,29 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+// Thread states tracking lifecycle of a thread
+enum threadstate
+{
+  THREAD_UNUSED,
+  THREAD_RUNNABLE,
+  THREAD_RUNNING,
+  THREAD_JOINED,
+  THREAD_SLEEPING
+};
+
+// Per-thread state and context
+// Each thread has its own trapframe for registers,
+// unique id, join status, and sleep timing info
+struct thread
+{
+  enum threadstate state;      // Current thread state
+  struct trapframe *trapframe; // Saved user/kernel registers
+  uint id;                     // Thread identifier
+  uint join;                   // Joined thread ID or 0
+  int sleep_n;                 // Sleep queue index or count
+  uint sleep_tick0;            // Tick count when sleep started
+};
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -106,27 +129,4 @@ struct proc {
   char name[16];               // Process name (debugging)
   struct thread threads[NTHREAD]; // Array of threads belonging to the process
   struct thread *current_thread;  // Pointer to the currently running thread
-};
-
-// Thread states tracking lifecycle of a thread
-enum threadstate
-{
-  THREAD_UNUSED,
-  THREAD_RUNNABLE,
-  THREAD_RUNNING,
-  THREAD_JOINED,
-  THREAD_SLEEPING
-};
-
-// Per-thread state and context
-// Each thread has its own trapframe for registers,
-// unique id, join status, and sleep timing info
-struct thread
-{
-  enum threadstate state;      // Current thread state
-  struct trapframe *trapframe; // Saved user/kernel registers
-  uint id;                     // Thread identifier
-  uint join;                   // Joined thread ID or 0
-  int sleep_n;                 // Sleep queue index or count
-  uint sleep_tick0;            // Tick count when sleep started
 };
