@@ -705,3 +705,33 @@ trigger(void)
   // TODO: Add a test to check if the log message was received by the logger.
   return 0;
 }
+
+// Create a thread, if successful returns a pointer to the new thread if not returns 0
+struct thread*
+allocthread(uint64 start_thread, uint64 stack_address,
+uint64 arg) {
+  struct proc *p = myproc();
+  if (!initthread(p))
+    return 0;
+  
+  for (struct thread *t = p->threads; t < p->threads + NTHREAD; t++) {
+    if (t->state == THREAD_UNUSED) {
+      t->id = allocpid();
+
+      // Check if memory allocation was successful; if not, clean up and break
+      if ((t->trapframe = (struct trapframe *)kalloc()) == 0) {
+        freethread(t);
+        break;
+      }
+
+      t->state = THREAD_RUNNABLE;
+      *t->trapframe = *p->trapframe;
+      t->trapframe->sp = stack_address;
+      t->trapframe->a0 = arg;
+      t->trapframe->ra = -1;
+      t->trapframe->epc = (uint64) start_thread;
+      return t;
+    }
+  }
+  return 0;
+}
