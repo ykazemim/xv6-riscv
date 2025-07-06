@@ -706,6 +706,85 @@ trigger(void)
   return 0;
 }
 
+// Initialize the threads of a process; if not successful, return 0
+struct thread*
+initthread(struct proc *p)
+{
+  if (!p->current_thread) {
+    // If the process doesn't have an active thread, initialize all threads
+
+    for (int i = 0; i < NTHREAD; ++i) {
+      p->threads[i].trapframe = 0;
+      freethread(&p->threads[i]);
+    }
+
+    struct thread *t = &p->threads[0];
+
+    // Assign the first thread ID to the process ID
+    t->id = p->pid;
+
+    // Attempts to allocate a trapframe for the first thread; if not successful, free the thread and return 0
+    if ((t->trapframe = (struct trapframe *)kalloc()) == 0) {
+      freethread(t);
+      return 0;
+    }
+
+    t->state = THREAD_RUNNING;
+    p->current_thread = t;
+
+  }
+  return p->current_thread;
+}
+
+// Schedules the next thread, on success returns 0 else 1
+int
+thread_schd(struct proc *p)
+{
+  if (!p->current_thread)
+    return 1;
+  
+  if (p->current_thread->state == THREAD_RUNNING)
+    p->current_thread->state = THREAD_RUNNABLE;
+
+  // Acquire the ticks lock and get the current tick count
+  acquire(&tickslock);
+  uint ticks0 = ticks;
+  release(&tickslock);
+
+  struct thread *next = 0;
+  struct thread *t = p->current_thread + 1;
+  for (int i = 0; i < NTHREAD; i++, t++) {
+
+    // If reached the end of array, simply go back to the first element (circular itteration)
+    if (t >= p->threads + NTHREAD)
+      t = p->threads;
+    
+    if (t->state == THREAD_RUNNABLE) {
+      next = t;
+      bread;
+    } else if (t->state == THREAD_SLEEPING && ticks0 - t->sleep_tick0 >= t->sleep_n) {
+      next = t;
+      break;
+    }
+  }
+
+  if (next == 0)
+    return 0;
+  else if (p->current_thread != next) {
+    next->state = THREAD_RUNNING;
+    struct thread *t = p->current_thread;
+    p->current_thread = next;
+    
+    // If the current thread has a trapframe, copy it to the process's trapframe
+    if (t->trapframe)
+      *t->trapframe = *p->trapframe;
+
+    // Finally copy the new thread's trapframe to the process's trapframe
+    *p->trapframe = *next->trapframe;
+  }
+  return 1;
+}
+
 // Create a thread, if successful returns a pointer to the new thread if not returns 0
 struct thread*
 allocthread(uint64 start_thread, uint64 stack_address,
