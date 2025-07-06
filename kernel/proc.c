@@ -747,3 +747,23 @@ freethread(struct thread *t)
   t->id = 0;
   t->join = 0;  
 }
+
+// End current thread
+void
+exitthread() {
+  struct proc *p = myproc();
+  uint id = p->current_thread->id;
+
+  // Checks if any thread is joined to the current thread;
+  // Meaning that if any thread is waiting for the current thread to finish)
+  for (struct thread *t = p->threads; t < p->threads + NTHREAD; t++) {
+    if (t->state == THREAD_JOINED && t->join == id) {
+      t->join = 0;
+      t->state = THREAD_RUNNABLE;
+    }
+  }
+
+  freethread(p->current_thread);
+  if (!thread_schd(p))
+    setkilled(p);
+}
