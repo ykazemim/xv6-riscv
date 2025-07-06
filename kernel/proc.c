@@ -735,3 +735,15 @@ uint64 arg) {
   }
   return 0;
 }
+
+// Free a thread
+void
+freethread(struct thread *t)
+{
+  t->state = THREAD_UNUSED;
+  if (t->trapframe)
+    kfree((void*)t->trapframe);
+  t->trapframe = 0;
+  t->id = 0;
+  t->join = 0;  
+}
