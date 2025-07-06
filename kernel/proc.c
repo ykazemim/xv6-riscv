@@ -801,5 +801,9 @@ jointhread(uint join_id) {
 
   if (!found)
     return -2;
-
+    
+  t->join = join_id;
+  t->state = THREAD_JOINED;
+  yield();
+  return 0;
 }
