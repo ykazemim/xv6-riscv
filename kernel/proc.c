@@ -801,9 +801,19 @@ jointhread(uint join_id) {
 
   if (!found)
     return -2;
-    
+
   t->join = join_id;
   t->state = THREAD_JOINED;
   yield();
   return 0;
+}
+
+// Put a thread to sleep for a specific time
+void
+sleepthread(int n, uint ticks0) {
+  struct thread *t = myproc()->current_thread;
+  t->sleep_n = n;
+  t->sleep_tick0 = ticks0;
+  t->state = THREAD_SLEEPING;
+  thread_schd(myproc());
 }
