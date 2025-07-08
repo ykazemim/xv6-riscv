@@ -41,6 +41,8 @@ void *my_thread(void *arg)
         printf("thread %d: %lu\n", ((struct thread_data *)arg)->thread_id, ((struct thread_data *)arg)->start_number);
         release_print_lock();
         // Release lock after printing
+
+        sleep(1); // Yield CPU to encourage thread interleaving (cooperative multitasking)
     }
     return (void *)((struct thread_data *)arg)->start_number;
 }
