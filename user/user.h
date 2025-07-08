@@ -22,7 +22,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int trigger(void); // New system call for triggering
+int trigger(void);
+int thread(void *, int *, void *);
+int jointhread(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
